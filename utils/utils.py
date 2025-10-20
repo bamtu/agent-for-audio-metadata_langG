@@ -1,6 +1,5 @@
 from utils.audio_tag_editor import *
 
-from langchain_openai import AzureOpenAIEmbeddings
 from langchain_ollama import OllamaEmbeddings
 
 from langchain.chains.query_constructor.base import AttributeInfo

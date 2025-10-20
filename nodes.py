@@ -76,7 +76,7 @@ def get_llm():
         api_key=os.getenv("AZURE_OPENAI_API_KEY"),
         azure_deployment=os.getenv("AZURE_OPENAI_DEPLOYMENT"),
         api_version=os.getenv("AZURE_OPENAI_API_VERSION"),
-        temperature=1
+        temperature=0.0
     )
     return llm
 
@@ -125,44 +125,18 @@ def tool_node(state: MessagesState):
 
     return {"messages": [response]}
 
-
-def should_continue_to_review(state: MessagesState) -> Literal["human_review", "end"]:
+def route_after_tool_choice(state: MessagesState) -> Literal["tool_executor", "end"]:
     """
-    Router: Check if tool calls exist to determine next step.
-    """
-    messages = state["messages"]
-    last_message = messages[-1]
-
-    # If there are tool calls, go to human review
-    if hasattr(last_message, 'tool_calls') and last_message.tool_calls:
-        return "human_review"
-
-    return "end"
-
-
-def human_review(state: MessagesState):
-    """
-    Human review node - passes through state for human inspection.
-    This node is interrupted before execution for human approval.
-    """
-    # Simply pass through the state
-    # The actual approval happens via interrupt mechanism
-    return state
-
-
-def should_execute_tool(state: MessagesState) -> Literal["tool_executor", "end"]:
-    """
-    Router after human review: determines whether to execute tool or end.
-    This is called after human approval/rejection.
+    Router: Checks for tool calls in the last message to decide the next step.
+    If tools are called, route to the executor. Otherwise, end the graph.
     """
     messages = state["messages"]
     last_message = messages[-1]
 
-    # If there are tool calls, execute them
     if hasattr(last_message, 'tool_calls') and last_message.tool_calls:
         return "tool_executor"
-
-    return "end"
+    else:
+        return "end"
 
 
 # Create tool execution node

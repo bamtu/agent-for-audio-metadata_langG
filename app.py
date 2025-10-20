@@ -4,13 +4,14 @@ import os
 
 from utils.utils import init_vector_store
 from langgraph.graph import END, MessagesState, StateGraph
+from langgraph.checkpoint.memory import MemorySaver
 
 from nodes import (
     get_llm,
     retrieve_node,
     tool_node,
     tool_executor,
-    should_continue_to_review
+    route_after_tool_choice
 )
 
 # Page config
@@ -60,9 +61,9 @@ def initialize_app():
     # Add conditional edge
     flow.add_conditional_edges(
         "tool",
-        should_continue_to_review,
+        route_after_tool_choice,
         {
-            "human_review": "tool_executor",
+            "tool_executor": "tool_executor",
             "end": END
         }
     )
@@ -70,7 +71,9 @@ def initialize_app():
     flow.add_edge("tool_executor", END)
 
     # Compile without checkpointer
+    memory = MemorySaver()
     app = flow.compile(
+        checkpointer=memory,
         interrupt_before=["tool_executor"]
     )
 
@@ -84,7 +87,7 @@ st.markdown("---")
 with st.sidebar:
     st.header("설정")
 
-    if st.button("Initialize Agent                 (Vector store initialization)", type="primary"):
+    if st.button("Initialize Agent (Vector store initialization)", type="primary"):
 
         try:
             st.session_state.app = initialize_app()
@@ -125,11 +128,20 @@ else:
                     # Execute the tool
                     result = st.session_state.app.invoke(None, st.session_state.thread_config)
 
+                    result = st.session_state.app.invoke(
+                        {"messages": []}, 
+                        st.session_state.thread_config
+                    )
+
+                    # 결과에서 마지막 메시지(ToolMessage)를 찾아서 표시
                     if result and "messages" in result:
-                        last_message = result["messages"][-1]
-                        response_text = last_message.content
+                        tool_message = result["messages"][-1]
+                        # tool_message.content에서 None이 아닌 경우만 표시
+                        content = tool_message.content if tool_message.content else ""
+                        # 간단히 결과만 표시
+                        response_text = content
                     else:
-                        response_text = "Tool executed successfully."
+                        response_text = "Tool executed successfully, but no result message was returned."
 
                     # Add to messages
                     st.session_state.messages.append({

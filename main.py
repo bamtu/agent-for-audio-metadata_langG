@@ -10,9 +10,7 @@ from nodes import (
     get_llm,
     retrieve_node,
     tool_node,
-    should_continue_to_review,
-    human_review,
-    should_execute_tool,
+    route_after_tool_choice,
     tool_executor
 )
 
@@ -37,7 +35,7 @@ if __name__ == "__main__":
     # Add nodes
     flow.add_node("retriever", retrieve_node)  # Start: search for files
     flow.add_node("update_tool", tool_node)    # Decide which metadata update tool to use
-    flow.add_node("human_review", human_review)  # Human review and approval
+    # flow.add_node("human_review", human_review)  # Human review and approval
     flow.add_node("tool_executor", tool_executor)  # Execute tools after human approval
 
     # Set entry point to retriever
@@ -49,20 +47,20 @@ if __name__ == "__main__":
     # Conditional routing from update_tool to human_review or end
     # If LLM selects a tool, go to human_review
     # Otherwise, end the flow
-    flow.add_conditional_edges(
-        "update_tool",
-        should_continue_to_review,
-        {
-            "human_review": "human_review",
-            "end": END
-        }
-    )
+    # flow.add_conditional_edges(
+    #     "update_tool",
+    #     should_continue_to_review,
+    #     {
+    #         "human_review": "human_review",
+    #         "end": END
+    #     }
+    # )
 
     # Conditional routing from human_review
     # After human approval, either execute tool or end
     flow.add_conditional_edges(
-        "human_review",
-        should_execute_tool,
+        "update_tool",
+        route_after_tool_choice,
         {
             "tool_executor": "tool_executor",
             "end": END
@@ -73,7 +71,7 @@ if __name__ == "__main__":
     flow.add_edge("tool_executor", END)
 
     # Compile the graph with interrupt before human_review for approval
-    app = flow.compile(interrupt_before=["human_review"])
+    app = flow.compile(interrupt_before=["tool_executor"])
 
     # Save graph visualization
     app.get_graph().draw_mermaid_png(output_file_path="graph.png")
@@ -120,17 +118,23 @@ if __name__ == "__main__":
                         approval = input("\nApprove these tool calls? (yes/no): ").strip().lower()
 
                         if approval in ['yes', 'y']:
-                            # Continue the workflow
+                            # Continue the workflow after approval (resume from interrupt)
                             print("\nExecuting tools...")
-                            result = app.invoke(None, config)
+                            # Resume from interrupt by passing the previous result
+                            continue_result = app.invoke({"messages": []}, config)
 
-                            # Display execution results
-                            if result and "messages" in result:
-                                for msg in result["messages"][-2:]:  # Show last 2 messages
-                                    if hasattr(msg, 'content') and msg.content:
-                                        print(f"\nResult: {msg.content}")
+                            # Display results after execution
+                            if continue_result and "messages" in continue_result:
+                                print("\n✓ Tools executed successfully.")
+                                for msg in continue_result["messages"]:
+                                    if msg.role == 'tool':
+                                        print(f"  - Result for [{msg.name}]: {msg.content}")
                         else:
                             print("\nTool execution cancelled.")
+                            app.update_state(
+                                config,
+                                {"messages": [("human", "Tool execution cancelled by user.")]}
+                            )
 
                 print()  # Empty line for readability
             else:
