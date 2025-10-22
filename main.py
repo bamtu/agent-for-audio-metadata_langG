@@ -35,7 +35,6 @@ if __name__ == "__main__":
     # Add nodes
     flow.add_node("retriever", retrieve_node)  # Start: search for files
     flow.add_node("update_tool", tool_node)    # Decide which metadata update tool to use
-    # flow.add_node("human_review", human_review)  # Human review and approval
     flow.add_node("tool_executor", tool_executor)  # Execute tools after human approval
 
     # Set entry point to retriever
@@ -43,18 +42,6 @@ if __name__ == "__main__":
 
     # retriever -> update_tool (always go to update_tool after retrieval)
     flow.add_edge("retriever", "update_tool")
-
-    # Conditional routing from update_tool to human_review or end
-    # If LLM selects a tool, go to human_review
-    # Otherwise, end the flow
-    # flow.add_conditional_edges(
-    #     "update_tool",
-    #     should_continue_to_review,
-    #     {
-    #         "human_review": "human_review",
-    #         "end": END
-    #     }
-    # )
 
     # Conditional routing from human_review
     # After human approval, either execute tool or end
