@@ -108,7 +108,7 @@ if __name__ == "__main__":
                             # Continue the workflow after approval (resume from interrupt)
                             print("\nExecuting tools...")
                             # Resume from interrupt by passing the previous result
-                            continue_result = app.invoke({"messages": []}, config)
+                            continue_result = app.invoke(None, config)
 
                             # Display results after execution
                             if continue_result and "messages" in continue_result:
