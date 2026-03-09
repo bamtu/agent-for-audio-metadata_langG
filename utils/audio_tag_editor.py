@@ -51,7 +51,7 @@ def return_metadata_from_folder(folder_path: str) -> list[dict]:
 
             except Exception as e:
                 # 오류 발생 시 기본값 그대로 유지
-                print(f"[오류] {filepath}: {e}")
+                print(f"[Error] {filepath}: {e}")
 
             result.append(metadata)
         
@@ -69,17 +69,16 @@ def store_metadata_in_vector_store(folder_path: str, embeddings) -> Chroma:
         
         document = Document(page_content=content, metadata=metadata, id=f"{file_path}")
         documents.append(document)
-        print(document)
 
     vector_store = Chroma.from_documents(documents=documents, embedding=embeddings)
-    print(f"메타데이터를 벡터 스토어에 저장했습니다. 문서 수: {len(documents)}")
+    print(f"Vector store initialized. Documents: {len(documents)}")
     return vector_store
 
 def store_page_content_in_vector_store(folder_path: str, embeddings) -> Chroma:
     metadata_list = return_metadata_from_folder(folder_path)
 
     documents = []
-    chunk_size = 100  # 10개씩 묶음
+    chunk_size = 10  # 10개씩 묶음
     for i in range(0, len(metadata_list), chunk_size):
         chunk = metadata_list[i:i + chunk_size]
 
@@ -107,7 +106,7 @@ def store_page_content_in_vector_store(folder_path: str, embeddings) -> Chroma:
         documents.append(document)
 
     vector_store = Chroma.from_documents(documents, embedding=embeddings)
-    print(f"✅ {len(documents)}개의 도큐먼트를 벡터 스토어에 저장했습니다. (총 {len(metadata_list)}개의 파일)")
+    print(f"Vector store initialized. Documents: {len(documents)} (Total files: {len(metadata_list)})")
 
     return vector_store, documents
 

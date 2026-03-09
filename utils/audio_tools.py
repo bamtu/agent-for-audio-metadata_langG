@@ -19,6 +19,17 @@ def get_filepaths_by_query_with_retriever_tool(query: str) -> list[str]:
     return filepaths
 
 @tool
+def get_filepaths_by_metadata_filter(field: str, value: str) -> list[str]:
+    """
+    정확히 일치하는 메타데이터로 파일 경로를 찾습니다.
+    field: "artist", "album", "genre" 등
+    value: 찾을 값 (예: "아이유")
+    """
+    vector_store = get_vector_store()
+    results = vector_store.get(where={field: value})
+    return [m.get("filepath") for m in results["metadatas"] if "filepath" in m]
+
+@tool
 def batch_update_artist_tool(filepaths: List[str], artists: List[str]):
     """
     Update the artists of the given audio files.
