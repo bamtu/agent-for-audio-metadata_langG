@@ -1,6 +1,6 @@
 import os
 from typing import Literal
-from langchain_openai import AzureChatOpenAI
+from langchain_openai import ChatOpenAI
 from langchain_core.messages import AIMessage, ToolMessage
 from langgraph.prebuilt import ToolNode
 from langgraph.graph import MessagesState
@@ -70,12 +70,10 @@ If retriever can't retrieve any files, inform the user that no files were found.
 
 
 def get_llm():
-    """Initialize Azure OpenAI LLM"""
-    llm = AzureChatOpenAI(
-        azure_endpoint=os.getenv("AZURE_OPENAI_ENDPOINT"),
-        api_key=os.getenv("AZURE_OPENAI_API_KEY"),
-        azure_deployment=os.getenv("AZURE_OPENAI_DEPLOYMENT"),
-        api_version=os.getenv("AZURE_OPENAI_API_VERSION"),
+    """Initialize OpenAI LLM"""
+    llm = ChatOpenAI(
+        api_key=os.getenv("OPENAI_API_KEY"),
+        model="gpt-5.1",
         temperature=0.0
     )
     return llm
