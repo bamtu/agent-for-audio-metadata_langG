@@ -19,8 +19,11 @@ audio metadata agent implementation with LangGraph
 
 ### 필요 조건
 
-ollama embedding -> bona/bge-m3-korean:latest가 local에서 구동되고 있어야함.
-
+ - ollama embedding -> bona/bge-m3-korean:latest가 local에서 구동되고 있어야함.
+ - .env파일의 예
+   ```bash
+   OPENAI_API_KEY="YOUR_API_KEY"
+   ```
 
 ### Streamlit을 사용하려면
 ```bash
