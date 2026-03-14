@@ -2,7 +2,7 @@ from utils.audio_tag_editor import *
 
 from langchain_ollama import OllamaEmbeddings
 
-from langchain.chains.query_constructor.base import AttributeInfo
+from langchain.chains.query_constructor.schema import AttributeInfo
 from langchain.retrievers.self_query.base import SelfQueryRetriever
 
 
@@ -10,11 +10,6 @@ def init_vector_store(folder_path: str, llm):
     global vector_store
     global retriever
     
-    # embeddings = AzureOpenAIEmbeddings(
-    #     azure_endpoint="https://ai-593601083ai249546569384.cognitiveservices.azure.com/",
-    #     azure_deployment="text-embedding-3-large",
-    #     openai_api_version="2024-02-01"
-    #     )
     embeddings = OllamaEmbeddings(model="bona/bge-m3-korean")
     vector_store = store_metadata_in_vector_store(folder_path=folder_path, embeddings=embeddings)
     num_vectors = len(vector_store.get()["ids"])

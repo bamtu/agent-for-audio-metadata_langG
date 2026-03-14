@@ -1,6 +1,6 @@
 import os
 from typing import Literal
-from langchain_openai import AzureChatOpenAI
+from langchain_openai import ChatOpenAI
 from langchain_core.messages import AIMessage, ToolMessage
 from langgraph.prebuilt import ToolNode
 from langgraph.graph import MessagesState
@@ -65,17 +65,16 @@ Available metadata update tools:
 - batch_update_to_same_album_artist_tool: Update same album artist for multiple files
 
 Use these tools only when user explicitly asks to update metadata.
+Before modifying metadata, you must first search for the file using get_filepaths_by_query_with_retriever_tool and then use the modification tool.
 If retriever can't retrieve any files, inform the user that no files were found.
 """
 
 
 def get_llm():
-    """Initialize Azure OpenAI LLM"""
-    llm = AzureChatOpenAI(
-        azure_endpoint=os.getenv("AZURE_OPENAI_ENDPOINT"),
-        api_key=os.getenv("AZURE_OPENAI_API_KEY"),
-        azure_deployment=os.getenv("AZURE_OPENAI_DEPLOYMENT"),
-        api_version=os.getenv("AZURE_OPENAI_API_VERSION"),
+    """Initialize OpenAI LLM"""
+    llm = ChatOpenAI(
+        api_key=os.getenv("OPENAI_API_KEY"),
+        model="gpt-5.1-2025-11-13",
         temperature=0.0
     )
     return llm

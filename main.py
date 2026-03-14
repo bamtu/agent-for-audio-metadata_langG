@@ -4,18 +4,13 @@ from utils.utils import *
 from utils.audio_tools import *
 from utils.audio_tag_editor import *
 
-from langgraph.graph import END, MessagesState, StateGraph
+from langgraph.checkpoint.memory import MemorySaver
 
-from nodes import (
-    get_llm,
-    retrieve_node,
-    tool_node,
-    route_after_tool_choice,
-    tool_executor
-)
+from graph import build_graph
+from nodes import get_llm
 
 if __name__ == "__main__":
-
+    
     load_dotenv()
 
     # Set folder path
@@ -30,35 +25,8 @@ if __name__ == "__main__":
     print("Vector store initialized successfully!")
 
     # Create LangGraph workflow
-    flow = StateGraph(MessagesState)
-
-    # Add nodes
-    flow.add_node("retriever", retrieve_node)  # Start: search for files
-    flow.add_node("update_tool", tool_node)    # Decide which metadata update tool to use
-    flow.add_node("tool_executor", tool_executor)  # Execute tools after human approval
-
-    # Set entry point to retriever
-    flow.set_entry_point("retriever")
-
-    # retriever -> update_tool (always go to update_tool after retrieval)
-    flow.add_edge("retriever", "update_tool")
-
-    # Conditional routing from human_review
-    # After human approval, either execute tool or end
-    flow.add_conditional_edges(
-        "update_tool",
-        route_after_tool_choice,
-        {
-            "tool_executor": "tool_executor",
-            "end": END
-        }
-    )
-
-    # After tool execution, end the flow
-    flow.add_edge("tool_executor", END)
-
-    # Compile the graph with interrupt before human_review for approval
-    app = flow.compile(interrupt_before=["tool_executor"])
+    memory = MemorySaver()
+    app = build_graph(memory)
 
     # Save graph visualization
     app.get_graph().draw_mermaid_png(output_file_path="graph.png")
@@ -108,7 +76,7 @@ if __name__ == "__main__":
                             # Continue the workflow after approval (resume from interrupt)
                             print("\nExecuting tools...")
                             # Resume from interrupt by passing the previous result
-                            continue_result = app.invoke({"messages": []}, config)
+                            continue_result = app.invoke(None, config)
 
                             # Display results after execution
                             if continue_result and "messages" in continue_result:
