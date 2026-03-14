@@ -9,13 +9,45 @@ from typing import List
 
 @tool
 def get_filepaths_by_query_with_retriever_tool(query: str) -> list[str]:
-    """
+    “””
     Returns a list of filepaths of music files that correspond to a given query message.
     Example: “Music files with the genre Pop”
-    """
-    retriever = get_retriever()
-    docs = retriever.invoke(query)
-    filepaths = [doc.metadata.get("filepath", "") for doc in docs if "filepath" in doc.metadata]
+
+    - artist, genre, album_artist: semantic similarity search (e.g. 아이유=IU, Mozart=모짜르트)
+    - other fields (title, album, year, etc.): exact match via SelfQueryRetriever
+    Both results are merged and deduplicated.
+    “””
+    seen = set()
+    filepaths = []
+
+    # 1) SelfQueryRetriever: title/album/year 등 정확한 메타데이터 필드 exact-match
+    try:
+        retriever = get_retriever()
+        docs = retriever.invoke(query)
+        for doc in docs:
+            fp = doc.metadata.get(“filepath”, “”)
+            if fp and fp not in seen:
+                seen.add(fp)
+                filepaths.append(fp)
+    except Exception:
+        pass
+
+    # 2) 의미론적 유사도 검색: artist/genre/album_artist 필드의 의미론적 동의어 검색
+    #    page_content = “artist genre album_artist” 텍스트로 임베딩되어 있음
+    try:
+        vector_store = get_vector_store()
+        num_vectors = len(vector_store.get()[“ids”])
+        docs_with_scores = vector_store.similarity_search_with_relevance_scores(
+            query, k=num_vectors, score_threshold=0.5
+        )
+        for doc, _score in docs_with_scores:
+            fp = doc.metadata.get(“filepath”, “”)
+            if fp and fp not in seen:
+                seen.add(fp)
+                filepaths.append(fp)
+    except Exception:
+        pass
+
     return filepaths
 
 @tool

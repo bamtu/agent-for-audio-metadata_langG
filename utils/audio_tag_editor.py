@@ -63,10 +63,15 @@ def store_metadata_in_vector_store(folder_path: str, embeddings) -> Chroma:
 
     for metadata in metadata_list:
         file_path = metadata["filepath"]
-        content = (
-            f"Audio file metadata for: {file_path}"
-        )
-        
+        # artist, genre, album_artist 텍스트만 page_content에 포함
+        # → 임베딩 유사도 검색으로 의미론적 동일 아티스트(아이유=IU, Mozart=모짜르트)를 찾을 수 있게 함
+        semantic_parts = list(filter(None, [
+            metadata.get("artist"),
+            metadata.get("genre"),
+            metadata.get("album_artist"),
+        ]))
+        content = " ".join(semantic_parts) or f"audio file: {file_path}"
+
         document = Document(page_content=content, metadata=metadata, id=f"{file_path}")
         documents.append(document)
         print(document)
