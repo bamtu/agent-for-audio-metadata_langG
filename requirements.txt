@@ -1,20 +1,24 @@
+# Core LLM / Agent framework
+langgraph==1.0.10
+langchain-core==1.2.17
+langchain-openai==1.1.10
+langchain-ollama==1.0.1
+langchain-classic==1.0.2
+langchain-chroma==1.1.0
+
+# Vector store backend
+chromadb==1.5.4
+
+# Audio metadata
 mutagen==1.47.0
 
-langchain==0.3.27
-langchain-core==0.3.79
-langchain-chroma==0.2.6
-langchain-ollama==0.3.9
-langchain-openai==0.3.27
-langchain-community==0.3.27
-
-langgraph==1.0.0
-
-chromadb==1.2.0
-
+# Web / API
 fastapi==0.135.1
-uvicorn==0.38.0
+uvicorn==0.41.0
+pydantic==2.12.5
 
-streamlit==1.45.1
+# UI
+streamlit==1.55.0
 
-python-dotenv==1.1.0
-pydantic==2.10.3
+# Env management
+python-dotenv==1.2.2

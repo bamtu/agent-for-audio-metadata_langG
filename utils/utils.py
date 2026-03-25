@@ -2,8 +2,8 @@ from utils.audio_tag_editor import *
 
 from langchain_ollama import OllamaEmbeddings
 
-from langchain.chains.query_constructor.schema import AttributeInfo
-from langchain.retrievers.self_query.base import SelfQueryRetriever
+from langchain_classic.chains.query_constructor.schema import AttributeInfo
+from langchain_classic.retrievers.self_query.base import SelfQueryRetriever
 
 
 def init_vector_store(folder_path: str, llm):
